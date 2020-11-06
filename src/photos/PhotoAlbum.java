@@ -1,3 +1,4 @@
+package photos;
 import java.util.*;
 import javax.servlet.http.HttpSession;
 
