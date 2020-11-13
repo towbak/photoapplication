@@ -1,46 +1,113 @@
 package photos;
 import java.util.*;
-import javax.servlet.http.HttpSession;
+import java.io.*;
+import javax.inject.*;
+import javax.enterprise.context.*;
 
-public class PhotoAlbum {
-	public static String ATTRIBUTE_NAME = "Photo_Album";
-	private List<byte[]> photoDataList = new ArrayList<byte[]> ();
-	private List<String> names = new ArrayList<String>();
+@Named(value = "photoAlbum")
+@SessionScoped
+public class PhotoAlbum implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private List<Photo> photos = new ArrayList<>();
+	private Photo currentPhoto = null;
 	
 	public PhotoAlbum() {
 	}
 	
-	public void setSession(HttpSession session) {
-		session.setAttribute(ATTRIBUTE_NAME, this);
+	public Photo getCurrentPhoto() {
+		return this.currentPhoto;
+	}
+
+	public void setCurrentPhoto(Photo currentPhoto) {
+		this.currentPhoto = currentPhoto;
+	}	
+	
+	public void addPhoto(Photo p) {
+		if (this.containsId(p.getId())) {
+			this.removePhoto(this.getPhotoById(p.getId()));
+		}
+		this.photos.add(p);
+	}
+	
+	private Photo getPhotoById(long id) {
+		for (Photo photo : this.photos) {
+			if (photo.getId() == id) {
+				return photo;
+			}
+		}
+		return null;
+	}
+	
+	public boolean containsId(long id) {
+		return this.getPhotoById(id) != null;
+	}
+	
+	public List<Photo> getPhotos(){
+		return this.photos;
+	}
+	
+	public void removePhoto(Photo photo) {
+		this.photos.remove(photo);
+	}
+	
+	public Photo getPhoto(long id) {
+		for (Photo photo : this.photos) {
+			if (photo.getId() == id) {
+				return photo;
+			}
+		}
+		return null;
 	}
 	
 	public List<String> getPhotoNames() {
+		List<String> names = new ArrayList<>();
+		for (Photo photo: this.photos) {
+			names.add(photo.getName());
+		}
 		return names;
 	}
 	
-	public synchronized void addPhoto(String name, byte[] bytes) {
-		this.photoDataList.add(bytes);
-		this.names.add(name);
+	public List<String> getPhotoFilenames() {
+		List<String> filenames = new ArrayList<>();
+		for (Photo photo: this.photos) {
+			filenames.add(photo.getFilename());
+		}
+		return filenames;
 	}
 	
-	public synchronized byte[] getPhotoData(int i) {
-		return (byte[]) photoDataList.get(i);
+	public int getIndexOf(String photoName) {
+		for (Photo photo: this.photos) {
+			if (photo.getFilename().equals(photoName)) {
+				return photos.indexOf(photo);
+			}
+		}
+		return -1;
 	}
 	
-	public synchronized String getPhotoName(int i) {
-		return (String) names.get(i);
+	public byte[] getPhotoData(int i) {
+		Photo photo = this.photos.get(i);
+		return photo.getData();
 	}
 	
-	public synchronized int getPhotoCount() {
-		return photoDataList.size();
+	public byte[] getPhotoDataByName(String name) {
+		for (Photo photo: this.photos) {
+			if (photo.getFilename().equals(name)) {
+				return photo.getData();
+			}
+		}
+		return null;
 	}
 	
-	public synchronized void removePhoto(int i) {
-		photoDataList.remove(i);
-		names.remove(i);
+	public String getPhotoName(int i) {
+		Photo photo = this.photos.get(i);
+		return photo.getFilename();
 	}
 	
-	public static PhotoAlbum getPhotoAlbum(HttpSession session) {
-		return (PhotoAlbum) session.getAttribute(ATTRIBUTE_NAME);
+	public int getPhotoCount() {
+		return photos.size();
 	}
+
 }
